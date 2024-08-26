@@ -1,2 +1,132 @@
+[![Build status](https://badge.buildkite.com/1c0fe32b0237364c58c977eabde2e01416fe075cb23e72c2aa.svg)](https://buildkite.com/theopenlane/go-turso)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=theopenlane_go-turso&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=theopenlane_go-turso)
+
 # go-turso
-a go wrapper for working with Turso database services
+
+Golang client for interacting with the Turso Platform API.
+
+Currently supports the following endpoints:
+
+1. `Organizations`: `List`
+1. `Groups`: `List`, `Get`, `Create`, `Delete`
+1. `Databases`: `List`, `Get`, `Create`, `Delete`
+1. `Database Locations`: `Add`, `Remove`
+1. `Database Tokens`: `Create`
+
+## Usage
+
+```
+go get github.com/theopenlane/go-turso
+```
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/theopenlane/go-turso"
+)
+
+func main() {
+	// setup the configuration
+	apiToken := os.Getenv("TURSO_API_TOKEN")
+	config := turso.Config{
+		Token:   apiToken,
+		BaseURL: "https://api.turso.tech",
+		OrgName: "theopenlane",
+	}
+
+	// create the Turso Client
+	tc, err := turso.NewClient(config)
+	if err != nil {
+		log.Fatalf("failed to initialize turso client", "error", err)
+	}
+
+	// List All Groups
+	groups, err := tc.Group.ListGroups(context.Background())
+	if err != nil {
+		fmt.Println("error listing groups:", err)
+
+		return
+	}
+
+	for _, group := range groups.Groups {
+		fmt.Println("Group:", group.Name)
+	}
+
+	// List All Databases
+	databases, err := tc.Database.ListDatabases(context.Background())
+	if err != nil {
+		fmt.Println("error listing databases:", err)
+
+		return
+	}
+
+	for _, database := range databases.Databases {
+		fmt.Println("Database:", database.Name)
+	}
+
+	// List All Organizations
+	orgs, err := tc.Organization.ListOrganizations(context.Background())
+	if err != nil {
+		fmt.Println("error listing organizations:", err)
+
+		return
+	}
+
+	for _, org := range *orgs {
+		fmt.Println("Organization:", org.Name, org.Slug)
+	}
+
+	// Create a new Group
+	g := turso.CreateGroupRequest{
+		Name:     "test-group",
+		Location: "ord",
+	}
+
+	group, err := tc.Group.CreateGroup(context.Background(), g)
+	if err != nil {
+		fmt.Println("error creating group:", err)
+	}
+
+	fmt.Println("Group Created:", group.Group.Name, group.Group.Locations)
+
+	// Delete the Group
+	deletedGroup, err := tc.Group.DeleteGroup(context.Background(), g.Name)
+	if err != nil {
+		fmt.Println("error deleting group:", err)
+	}
+
+	fmt.Println("Group Deleted:", deletedGroup.Group.Name, deletedGroup.Group.Locations)
+
+	// Create a new Database
+	d := turso.CreateDatabaseRequest{
+		Group:    "default",
+		IsSchema: false,
+		Name:     "test-database",
+	}
+
+	database, err := tc.Database.CreateDatabase(context.Background(), d)
+	if err != nil {
+		fmt.Println("error creating database:", err)
+	}
+
+	fmt.Println("Database Created:", database.Database.Name)
+
+	// Delete the Database
+	deletedDatabase, err := tc.Database.DeleteDatabase(context.Background(), d.Name)
+	if err != nil {
+		fmt.Println("error deleting database:", err)
+	}
+
+	fmt.Println("Database Deleted:", deletedDatabase.Database)
+}
+```
+
+## References
+
+1. [Turso Platform API](https://docs.turso.tech/api-reference/introduction)
