@@ -9,7 +9,7 @@ steps:
       - label: ":golangci-lint: lint :lint-roller:"
         key: "lint"
         plugins:
-          - docker#v5.12.0:
+          - docker#v5.14.0:
               image: "registry.hub.docker.com/golangci/golangci-lint:latest-alpine"
               command: ["golangci-lint", "run", "-v"]
               always-pull: true
@@ -18,7 +18,7 @@ steps:
       - label: ":golang: go test"
         key: "go_test"
         plugins:
-          - docker#v5.12.0:
+          - docker#v5.14.0:
               image: golang:1.23.3
               command: ["go", "test", "-coverprofile=coverage.out", "./..."]
         artifact_paths: ["coverage.out"]
@@ -33,7 +33,7 @@ steps:
           - artifacts#v1.9.4:
               download: "coverage.out"
               step: "go_test"
-          - docker#v5.12.0:
+          - docker#v5.14.0:
               image: "sonarsource/sonar-scanner-cli:5"
               environment:
                 - "SONAR_TOKEN"
@@ -50,7 +50,7 @@ steps:
           - artifacts#v1.9.4:
               download: coverage.out
               step: "go_test"
-          - docker#v5.12.0:
+          - docker#v5.14.0:
               image: "sonarsource/sonar-scanner-cli:5"
               environment:
                 - "SONAR_TOKEN"
